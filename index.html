@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>約時間 · Find a Day</title>
+<meta name="description" content="Pick the days you are free and find the day that suits the most people.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+TC:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f3ee; --card:#ffffff; --ink:#1f2a24; --muted:#6c7570; --line:#e6e1d8;
+    --accent:#1f7a55; --accent-ink:#ffffff; --mine:#e8a33d; --danger:#b5443a;
+    --h0:#ffffff; --radius:14px;
+    --font:"Inter","Noto Sans TC",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;cursor:pointer}
+  input{font:inherit;color:inherit}
+  .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 48px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+  .brand .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  .title-input{font-family:"DM Serif Display","Noto Sans TC",serif;font-size:34px;line-height:1.15;border:none;background:transparent;padding:2px 0;border-bottom:2px dashed transparent;width:min(560px,80vw);outline:none}
+  .title-input:hover,.title-input:focus{border-bottom-color:var(--line)}
+  .head-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 14px;font-size:14px}
+  .pill b{font-weight:600}
+  .pill button{border:none;background:#f0ece4;border-radius:999px;padding:4px 10px;font-size:13px}
+  .lang{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 12px;font-size:13px}
+  .status{font-size:12px;color:var(--muted);min-width:60px;text-align:right}
+
+  .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+  @media (max-width:900px){.layout{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+  .notice{background:#fff6e5;border:1px solid #f0d9a8;color:#7a5a17;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:14px;display:none}
+  .notice.show{display:block}
+
+  .cal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+  .cal-top h2{margin:0;font-family:"DM Serif Display","Noto Sans TC",serif;font-weight:400;font-size:26px}
+  .nav{display:flex;gap:6px}
+  .nav button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 12px;font-size:14px}
+  .nav button:hover{background:#f3efe8}
+  .hint{font-size:13px;color:var(--muted);margin:0 0 10px}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;-webkit-user-select:none}
+  .dow{font-size:12px;color:var(--muted);text-align:center;padding:4px 0;font-weight:600}
+  .day{position:relative;aspect-ratio:1/0.92;min-height:62px;border:1px solid var(--line);border-radius:12px;background:var(--h0);padding:6px 7px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;transition:transform .06s ease, box-shadow .1s ease;touch-action:manipulation}
+  .day:hover{box-shadow:0 0 0 2px #cfc8bb inset}
+  .day .num{font-size:14px;font-weight:600}
+  .day .cnt{font-size:12px;font-weight:600;opacity:.85}
+  .day.out{opacity:.35}
+  .day.past{opacity:.35;cursor:not-allowed}
+  .day.today .num{background:var(--ink);color:#fff;border-radius:999px;padding:0 7px;display:inline-block}
+  .day.mine{box-shadow:0 0 0 3px var(--mine) inset}
+  .day.mine::after{content:"✓";position:absolute;top:5px;right:8px;font-size:13px;font-weight:700;color:var(--mine)}
+  .day.dark{color:#fff}
+  .day.dark.mine::after{color:#ffd58a}
+  .day.focus{outline:3px solid var(--ink);outline-offset:1px}
+  .day.full .cnt::before{content:"★ "}
+  .legend{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
+  .ramp{display:flex;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+  .ramp span{width:22px;height:12px}
+  .sw-mine{width:14px;height:14px;border-radius:4px;box-shadow:0 0 0 3px var(--mine) inset;display:inline-block}
+  .cal-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:13px}
+  .btn:hover{background:#f3efe8}
+  .btn.danger{color:var(--danger)}
+
+  aside{display:flex;flex-direction:column;gap:16px;position:sticky;top:16px}
+  @media (max-width:900px){aside{position:static}}
+  aside h3{margin:0 0 10px;font-size:15px;font-weight:700}
+  .size-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .stepper button{border:none;background:#f3efe8;width:34px;height:34px;font-size:18px}
+  .stepper input{width:48px;border:none;text-align:center;font-weight:700;font-size:16px;outline:none;-moz-appearance:textfield}
+  .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .progress{height:8px;background:#efeae1;border-radius:99px;overflow:hidden;margin-top:12px}
+  .progress div{height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
+  .sub{font-size:13px;color:var(--muted);margin-top:6px}
+  .rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .rank li button{width:100%;display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:10px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 10px;text-align:left}
+  .rank li button:hover,.rank li button.sel{border-color:var(--accent);background:#f2f8f4}
+  .rank .pos{font-weight:700;color:var(--muted);font-size:13px;text-align:center}
+  .rank li:first-child .pos{color:var(--accent)}
+  .rank .date{font-weight:600;font-size:14px}
+  .rank .bar{height:5px;background:#efeae1;border-radius:9px;margin-top:5px;overflow:hidden}
+  .rank .bar i{display:block;height:100%;background:var(--accent)}
+  .rank .n{font-weight:700;font-size:14px;white-space:nowrap}
+  .rank .n small{color:var(--muted);font-weight:500}
+  .empty{font-size:14px;color:var(--muted);line-height:1.5}
+  .names{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px 4px 4px;border-radius:999px;background:#f3efe8}
+  .chip .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+  .chip.off{opacity:.45}
+  .chip.me{background:#fdf0da}
+  .detail-h{font-weight:700;font-size:15px;margin-bottom:8px}
+  .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px;font-weight:600}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(31,42,36,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+  .modal-bg.show{display:flex}
+  .modal{background:#fff;border-radius:18px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+  .modal h2{font-family:"DM Serif Display","Noto Sans TC",serif;font-weight:400;font-size:28px;margin:0 0 6px}
+  .modal p{color:var(--muted);font-size:14px;margin:0 0 18px;line-height:1.5}
+  .modal input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;outline:none}
+  .modal input:focus{border-color:var(--accent)}
+  .modal .primary{margin-top:14px;width:100%;border:none;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:12px;font-size:16px;font-weight:600}
+  .modal .primary:disabled{opacity:.5;cursor:default}
+  .existing{margin-top:16px}
+  .existing .names button{border:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="kicker" data-t="kicker"></div>
+      <input id="title" class="title-input" maxlength="60" aria-label="Event title">
+    </div>
+    <div class="head-right">
+      <span class="status" id="status"></span>
+      <button class="lang" id="copyBtn" data-t="copyLink"></button>
+      <button class="lang" id="newBtn" data-t="newEvent"></button>
+      <button class="lang" id="langBtn"></button>
+      <span class="pill" id="mePill" style="display:none"><span><span data-t="hi"></span> <b id="meName"></b></span><button id="switchBtn" data-t="switch"></button></span>
+    </div>
+  </header>
+
+  <div class="notice" id="notice"></div>
+
+  <div class="layout">
+    <section class="card">
+      <div class="cal-top">
+        <h2 id="monthLabel"></h2>
+        <div class="nav">
+          <button id="prev" aria-label="Previous month">‹</button>
+          <button id="todayBtn" data-t="today"></button>
+          <button id="next" aria-label="Next month">›</button>
+        </div>
+      </div>
+      <p class="hint" data-t="tapHint"></p>
+      <div class="grid" id="dow"></div>
+      <div class="grid" id="grid" style="margin-top:6px"></div>
+      <div class="legend">
+        <span data-t="fewer"></span>
+        <span class="ramp" id="ramp"></span>
+        <span data-t="more"></span>
+        <span style="margin-left:12px" class="sw-mine"></span><span data-t="yours"></span>
+      </div>
+      <div class="cal-actions">
+        <button class="btn" id="clearBtn" data-t="clearMine"></button>
+        <button class="btn danger" id="removeBtn" data-t="removeMe"></button>
+      </div>
+    </section>
+
+    <aside>
+      <div class="card">
+        <div class="size-row">
+          <h3 style="margin:0" data-t="groupSize"></h3>
+          <div class="stepper">
+            <button id="minus" aria-label="Fewer">−</button>
+            <input id="size" type="number" min="2" max="100" inputmode="numeric" aria-label="Group size">
+            <button id="plus" aria-label="More">+</button>
+          </div>
+        </div>
+        <div class="progress"><div id="progBar"></div></div>
+        <div class="sub" id="responded"></div>
+      </div>
+
+      <div class="card">
+        <h3 data-t="bestDays"></h3>
+        <ul class="rank" id="rank"></ul>
+      </div>
+
+      <div class="card" id="detailCard">
+        <h3 data-t="dayDetail"></h3>
+        <div id="detail"></div>
+      </div>
+
+      <div class="card">
+        <h3 data-t="whosIn"></h3>
+        <div class="names" id="people"></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <form class="modal" id="nameForm">
+    <h2 data-t="askName"></h2>
+    <p data-t="askHint"></p>
+    <input id="nameInput" maxlength="24" autocomplete="name" required>
+    <button class="primary" id="joinBtn" type="submit" data-t="join"></button>
+    <div class="existing" id="existingWrap" style="display:none">
+      <div class="lbl" data-t="orPick"></div>
+      <div class="names" id="existing"></div>
+    </div>
+  </form>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { firebaseConfig } from "./config.js";
+{
+  // ---------- i18n ----------
+  const T = {
+    en: {
+      kicker:"約時間 · Find a day", hi:"Hi,", switch:"Not you?", today:"Today",
+      tapHint:"Tap (or drag) across every day you're free. Darker green = more people free.",
+      fewer:"Fewer free", more:"More free", yours:"Your picks",
+      clearMine:"Clear my days", removeMe:"Remove me from the list",
+      groupSize:"Group size", bestDays:"Best days",
+      responded:(n,m)=>`${n} of ${m} people have responded`,
+      noData:"No one has picked any days yet. Pick the days you're free on the calendar.",
+      dayDetail:"Who's free", hoverHint:"Hover or tap a day to see who's free.",
+      free:"Free", notFree:"Not free / not answered", whosIn:"Who's in",
+      nobody:"Nobody yet", allFree:"Everyone can make it!",
+      askName:"What's your name?", askHint:"Everyone in the group opens this same link, enters their name, and ticks the days they're free.",
+      join:"Continue", orPick:"Or continue as",
+      saving:"Saving…", saved:"Saved ✓", saveErr:"Couldn't save",
+      offline:"Shared saving isn't available in this view — your picks will only stay in this tab.",
+      slow:"Can't reach the shared data yet. Picks may be out of date.",
+      readOnly:"You can view this calendar but don't have permission to add days. Ask the owner to share it with you as a Contributor.",
+      full:"Storage is full — ask the organizer to remove old entries.",
+      defaultTitle:"Our get-together", picked:n=>`${n} day${n===1?"":"s"} picked`,
+      lang:"中文", confirmRemove:"Tap again to confirm",
+      copyLink:"Copy link", copied:"Link copied ✓", newEvent:"+ New event",
+      notSetUp:"The database isn't set up yet — open config.js and paste your Firebase settings (see README)."
+    },
+    zh: {
+      kicker:"約時間 · 搵日子", hi:"你好，", switch:"唔係你？", today:"今日",
+      tapHint:"點選（或拖拉）所有你得閒嘅日子。顏色越深 = 越多人得閒。",
+      fewer:"少人得閒", more:"多人得閒", yours:"你揀咗",
+      clearMine:"清除我嘅選擇", removeMe:"將我從名單移除",
+      groupSize:"總人數", bestDays:"最多人得閒",
+      responded:(n,m)=>`${m} 人之中已有 ${n} 人回覆`,
+      noData:"仲未有人揀日子。喺日曆上揀你得閒嘅日子啦。",
+      dayDetail:"邊個得閒", hoverHint:"將滑鼠移到或點一下日子，睇吓邊個得閒。",
+      free:"得閒", notFree:"唔得閒／未回覆", whosIn:"參加者",
+      nobody:"暫時未有人", allFree:"全部人都得閒！",
+      askName:"你叫咩名？", askHint:"大家打開同一條連結，輸入名字，然後揀自己得閒嘅日子。",
+      join:"繼續", orPick:"或者用以下名字繼續",
+      saving:"儲存中…", saved:"已儲存 ✓", saveErr:"儲存失敗",
+      offline:"呢個畫面用唔到共享儲存——你嘅選擇只會留喺呢個分頁。",
+      slow:"暫時連唔到共享資料，顯示嘅內容可能唔係最新。",
+      readOnly:"你可以睇呢個日曆，但未有權限揀日子。請叫擁有者以「Contributor」身份分享畀你。",
+      full:"儲存空間已滿——請叫搞手移除舊資料。",
+      defaultTitle:"我哋嘅聚會", picked:n=>`已揀 ${n} 日`,
+      lang:"EN", confirmRemove:"再按一次確認",
+      copyLink:"複製連結", copied:"已複製連結 ✓", newEvent:"＋ 新活動",
+      notSetUp:"資料庫未設定——請打開 config.js 貼上你嘅 Firebase 設定（見 README）。"
+    }
+  };
+  const ls = {
+    get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+    set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} },
+    del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  };
+  let lang = ls.get("yt-lang") || ((navigator.language||"").toLowerCase().startsWith("zh") ? "zh" : "en");
+  const t = (k,...a) => { const v = T[lang][k]; return typeof v === "function" ? v(...a) : v; };
+  const locale = () => lang === "zh" ? "zh-HK" : "en-GB";
+
+  // ---------- state ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+  const pad = n => String(n).padStart(2,"0");
+  const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  const parseKey = k => { const [y,m,d] = k.split("-").map(Number); return new Date(y,m-1,d); };
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayKey = keyOf(today);
+
+  const rawE = new URLSearchParams(location.search).get("e") || "main";
+  const EVENT = /^[A-Za-z0-9_-]{1,40}$/.test(rawE) ? rawE : "main";
+  const NAME_KEY = "yt-name-" + EVENT;
+  let db = null, canWrite = true;
+  let people = {};            // id -> {name, dates:[]}
+  let config = { title:"", groupSize:5 };
+  let meId = null, meName = null;
+  let myDates = new Set();
+  let dirty = false;
+  let view = new Date(today.getFullYear(), today.getMonth(), 1);
+  let focusKey = null;
+
+  function idFor(name){
+    const bytes = new TextEncoder().encode(name.trim().toLowerCase());
+    return "p-" + Array.from(bytes, b => b.toString(16).padStart(2,"0")).join("");
+  }
+  const COLORS = ["#1f7a55","#c2603a","#3b6fb6","#8a4fb0","#b08a1f","#2f8f9a","#b5446e","#5b7a2a","#7a5a3a","#4a4fb0"];
+  function colorFor(id){ let h=0; for(const c of id) h=(h*31+c.charCodeAt(0))>>>0; return COLORS[h%COLORS.length]; }
+  const initial = n => esc(Array.from(n.trim())[0] || "?").toUpperCase();
+
+  // Heat ramp: white -> deep green
+  function heat(ratio){
+    if (ratio <= 0) return "#ffffff";
+    const a=[232,245,236], b=[18,92,62];
+    const r = Math.min(1, ratio);
+    const mix = a.map((v,i)=>Math.round(v+(b[i]-v)*r));
+    return `rgb(${mix.join(",")})`;
+  }
+
+  function allPeople(){
+    const map = {...people};
+    if (meId) map[meId] = { name: meName, dates: [...myDates] };
+    return Object.entries(map)
+      .filter(([,p]) => p && p.name)
+      .map(([id,p]) => ({ id, name:String(p.name), dates:new Set(Array.isArray(p.dates)?p.dates:[]) }))
+      .sort((x,y)=>x.name.localeCompare(y.name));
+  }
+  function counts(list){
+    const c = {};
+    for (const p of list) for (const d of p.dates) (c[d] ||= []).push(p);
+    return c;
+  }
+  const effSize = list => Math.max(config.groupSize || 2, list.filter(p=>p.dates.size>0).length, 1);
+
+  // ---------- render ----------
+  function applyStatic(){
+    document.documentElement.lang = lang === "zh" ? "zh-HK" : "en";
+    document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+    $("langBtn").textContent = t("lang");
+    $("nameInput").placeholder = lang==="zh" ? "例如：阿明" : "e.g. Alex";
+    const fmt = new Intl.DateTimeFormat(locale(), { weekday:"short" });
+    const base = new Date(2023,0,1); // a Sunday
+    $("dow").innerHTML = Array.from({length:7},(_,i)=>`<div class="dow">${esc(fmt.format(new Date(2023,0,1+i)))}</div>`).join("");
+    $("ramp").innerHTML = [0.15,0.35,0.55,0.75,1].map(r=>`<span style="background:${heat(r)}"></span>`).join("");
+  }
+
+  function render(){
+    const list = allPeople();
+    const c = counts(list);
+    const size = effSize(list);
+
+    if (document.activeElement !== $("title")) $("title").value = config.title || t("defaultTitle");
+    if (document.activeElement !== $("size")) $("size").value = config.groupSize;
+
+    $("monthLabel").textContent = new Intl.DateTimeFormat(locale(), { year:"numeric", month:"long" }).format(view);
+
+    // calendar
+    const first = new Date(view.getFullYear(), view.getMonth(), 1);
+    const start = new Date(first); start.setDate(1 - first.getDay());
+    let html = "";
+    for (let i=0;i<42;i++){
+      const d = new Date(start); d.setDate(start.getDate()+i);
+      if (i===35 && d.getMonth() !== view.getMonth()) break;
+      const k = keyOf(d);
+      const n = (c[k]||[]).length;
+      const ratio = n/size;
+      const cls = ["day"];
+      if (d.getMonth() !== view.getMonth()) cls.push("out");
+      if (d < today) cls.push("past");
+      if (k === todayKey) cls.push("today");
+      if (myDates.has(k)) cls.push("mine");
+      if (ratio > 0.55) cls.push("dark");
+      if (n>0 && n>=size) cls.push("full");
+      if (k === focusKey) cls.push("focus");
+      html += `<button class="${cls.join(" ")}" data-k="${k}" style="background:${heat(ratio)}" aria-pressed="${myDates.has(k)}" aria-label="${k}: ${n}/${size}">
+        <span><span class="num">${d.getDate()}</span></span>
+        <span class="cnt">${n?`${n}/${size}`:""}</span></button>`;
+    }
+    $("grid").innerHTML = html;
+
+    // responded
+    const respondedN = list.filter(p=>p.dates.size>0).length;
+    $("responded").textContent = t("responded", respondedN, size);
+    $("progBar").style.width = Math.min(100, respondedN/size*100) + "%";
+
+    // ranking (today onward)
+    const ranked = Object.entries(c)
+      .filter(([k]) => k >= todayKey)
+      .sort((a,b) => b[1].length - a[1].length || a[0].localeCompare(b[0]))
+      .slice(0,8);
+    const dfmt = new Intl.DateTimeFormat(locale(), { weekday:"short", day:"numeric", month:"short" });
+    $("rank").innerHTML = ranked.length ? ranked.map(([k,ps],i)=>`
+      <li><button data-k="${k}" class="${k===focusKey?"sel":""}">
+        <span class="pos">${i+1}</span>
+        <span><div class="date">${esc(dfmt.format(parseKey(k)))}</div>
+          <div class="bar"><i style="width:${Math.min(100,ps.length/size*100)}%"></i></div></span>
+        <span class="n">${ps.length}<small>/${size}</small>${ps.length>=size?" ★":""}</span>
+      </button></li>`).join("")
+      : `<li class="empty">${esc(t("noData"))}</li>`;
+
+    // detail
+    renderDetail(list, c, size);
+
+    // people
+    $("people").innerHTML = list.length ? list.map(p=>`
+      <span class="chip ${p.dates.size?"":"off"} ${p.id===meId?"me":""}" title="${esc(t("picked",p.dates.size))}">
+        <span class="av" style="background:${colorFor(p.id)}">${initial(p.name)}</span>${esc(p.name)}
+        <small style="color:var(--muted)">${p.dates.size}</small></span>`).join("")
+      : `<span class="empty">${esc(t("nobody"))}</span>`;
+
+    $("mePill").style.display = meName ? "" : "none";
+    $("meName").textContent = meName || "";
+    $("clearBtn").disabled = $("removeBtn").disabled = !meId || !canWrite;
+  }
+
+  function renderDetail(list, c, size){
+    list ||= allPeople(); c ||= counts(list); size ||= effSize(list);
+    if (!focusKey){ $("detail").innerHTML = `<div class="empty">${esc(t("hoverHint"))}</div>`; return; }
+    const free = c[focusKey] || [];
+    const freeIds = new Set(free.map(p=>p.id));
+    const not = list.filter(p=>!freeIds.has(p.id));
+    const dfmt = new Intl.DateTimeFormat(locale(), { weekday:"long", day:"numeric", month:"long" });
+    const chip = (p,off) => `<span class="chip ${off?"off":""}"><span class="av" style="background:${colorFor(p.id)}">${initial(p.name)}</span>${esc(p.name)}</span>`;
+    $("detail").innerHTML = `
+      <div class="detail-h">${esc(dfmt.format(parseKey(focusKey)))} · ${free.length}/${size}</div>
+      ${free.length>=size && free.length ? `<div style="color:var(--accent);font-weight:600;font-size:14px">🎉 ${esc(t("allFree"))}</div>`:""}
+      <div class="lbl">${esc(t("free"))}</div>
+      <div class="names">${free.length?free.map(p=>chip(p,false)).join(""):`<span class="empty">—</span>`}</div>
+      <div class="lbl">${esc(t("notFree"))}</div>
+      <div class="names">${not.length?not.map(p=>chip(p,true)).join(""):`<span class="empty">—</span>`}</div>`;
+  }
+
+  // ---------- status / notices ----------
+  let statusTimer;
+  function setStatus(k){ clearTimeout(statusTimer); $("status").textContent = k ? t(k) : ""; if (k==="saved") statusTimer = setTimeout(()=>$("status").textContent="",2000); }
+  function notice(k){ const n=$("notice"); if(!k){n.classList.remove("show");return;} n.textContent=t(k); n.classList.add("show"); }
+
+  // ---------- writes ----------
+  let saveTimer = null, writing = Promise.resolve();
+  function scheduleSave(){
+    dirty = true;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveMine, 600);
+  }
+  function saveMine(){
+    saveTimer = null;
+    if (!db || !meId || !canWrite) { dirty = false; return; }
+    const body = { name: meName, dates: [...myDates].sort(), updated: new Date().toISOString() };
+    const id = meId;
+    setStatus("saving");
+    writing = writing.then(() => setDoc(doc(db, "events", EVENT, "people", id), body))
+      .then(() => { dirty = saveTimer !== null; setStatus("saved"); })
+      .catch(handleWriteErr);
+  }
+  function handleWriteErr(e){
+    dirty = false;
+    console.error(e);
+    if (e && e.code === "resource-exhausted") { notice("full"); }
+    setStatus("saveErr");
+  }
+  let cfgTimer = null;
+  function saveConfig(){
+    clearTimeout(cfgTimer);
+    cfgTimer = setTimeout(() => {
+      if (!db || !canWrite) return;
+      setStatus("saving");
+      writing = writing.then(() => setDoc(doc(db, "events", EVENT), { title: config.title, groupSize: config.groupSize }))
+        .then(() => setStatus("saved")).catch(handleWriteErr);
+    }, 500);
+  }
+
+  // ---------- identity ----------
+  function setMe(name){
+    name = name.trim().slice(0,24);
+    if (!name) return;
+    meName = name; meId = idFor(name);
+    const existing = people[meId];
+    myDates = new Set(existing && Array.isArray(existing.dates) ? existing.dates : []);
+    ls.set(NAME_KEY, name);
+    $("modal").classList.remove("show");
+    render();
+    if (!existing && db && canWrite) scheduleSave(); // register in list
+  }
+  function openModal(){
+    $("nameInput").value = "";
+    const list = Object.entries(people).filter(([,p])=>p&&p.name).map(([id,p])=>({id,name:String(p.name)}));
+    $("existingWrap").style.display = list.length ? "" : "none";
+    $("existing").innerHTML = list.map(p=>`<button type="button" class="chip" data-name="${esc(p.name)}"><span class="av" style="background:${colorFor(p.id)}">${initial(p.name)}</span>${esc(p.name)}</button>`).join("");
+    $("modal").classList.add("show");
+    setTimeout(()=>$("nameInput").focus(), 50);
+  }
+
+  // ---------- interactions ----------
+  let drag = null;
+  function toggleDay(k, mode){
+    if (!meId) { openModal(); return; }
+    if (!canWrite) return;
+    if (k < todayKey) return;
+    const has = myDates.has(k);
+    const want = mode ?? !has;
+    if (want === has) return;
+    want ? myDates.add(k) : myDates.delete(k);
+    focusKey = k;
+    render();
+    scheduleSave();
+  }
+  $("grid").addEventListener("pointerdown", e => {
+    const b = e.target.closest(".day"); if (!b) return;
+    const k = b.dataset.k;
+    if (k < todayKey) { focusKey = k; render(); return; }
+    const mode = !myDates.has(k);
+    toggleDay(k, mode);
+    if (e.pointerType === "mouse") drag = { mode };
+  });
+  $("grid").addEventListener("pointerover", e => {
+    const b = e.target.closest(".day"); if (!b) return;
+    if (drag) toggleDay(b.dataset.k, drag.mode);
+    else if (e.pointerType === "mouse" && b.dataset.k !== focusKey) {
+      focusKey = b.dataset.k;
+      document.querySelectorAll(".day.focus").forEach(x=>x.classList.remove("focus"));
+      b.classList.add("focus");
+      renderDetail();
+    }
+  });
+  window.addEventListener("pointerup", () => drag = null);
+  $("grid").addEventListener("keydown", e => {
+    const b = e.target.closest(".day"); if (!b) return;
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleDay(b.dataset.k); }
+  });
+  $("rank").addEventListener("click", e => {
+    const b = e.target.closest("button[data-k]"); if (!b) return;
+    focusKey = b.dataset.k;
+    const d = parseKey(focusKey); view = new Date(d.getFullYear(), d.getMonth(), 1);
+    render();
+    if (window.innerWidth <= 900) $("detailCard").scrollIntoView({behavior:"smooth", block:"start"});
+  });
+  $("prev").onclick = () => { view = new Date(view.getFullYear(), view.getMonth()-1, 1); render(); };
+  $("next").onclick = () => { view = new Date(view.getFullYear(), view.getMonth()+1, 1); render(); };
+  $("todayBtn").onclick = () => { view = new Date(today.getFullYear(), today.getMonth(), 1); render(); };
+  $("langBtn").onclick = () => { lang = lang==="en"?"zh":"en"; ls.set("yt-lang", lang); applyStatic(); render(); };
+  $("switchBtn").onclick = () => { if (dirty) saveMine(); meId = meName = null; myDates = new Set(); ls.del(NAME_KEY); render(); openModal(); };
+  $("nameForm").addEventListener("submit", e => { e.preventDefault(); setMe($("nameInput").value); });
+  $("existing").addEventListener("click", e => { const b = e.target.closest("[data-name]"); if (b) setMe(b.dataset.name); });
+
+  $("clearBtn").onclick = () => { if (!myDates.size) return; myDates.clear(); render(); scheduleSave(); };
+  let removeArmed = null;
+  $("removeBtn").onclick = () => {
+    if (!meId) return;
+    if (!removeArmed) {
+      $("removeBtn").textContent = t("confirmRemove");
+      removeArmed = setTimeout(() => { removeArmed=null; $("removeBtn").textContent = t("removeMe"); }, 3000);
+      return;
+    }
+    clearTimeout(removeArmed); removeArmed = null; $("removeBtn").textContent = t("removeMe");
+    clearTimeout(saveTimer); dirty = false;
+    const id = meId;
+    delete people[id];
+    meId = meName = null; myDates = new Set(); ls.del(NAME_KEY);
+    if (db) writing = writing.then(()=>deleteDoc(doc(db, "events", EVENT, "people", id))).catch(handleWriteErr);
+    render(); openModal();
+  };
+
+  $("title").addEventListener("input", () => { config.title = $("title").value.slice(0,60); saveConfig(); });
+  $("title").addEventListener("keydown", e => { if (e.key==="Enter") $("title").blur(); });
+  function setSize(n){
+    n = Math.max(2, Math.min(100, Math.round(Number(n)||2)));
+    if (n === config.groupSize) { $("size").value = n; return; }
+    config.groupSize = n; render(); saveConfig();
+  }
+  $("minus").onclick = () => setSize(config.groupSize-1);
+  $("plus").onclick = () => setSize(config.groupSize+1);
+  $("size").addEventListener("change", () => setSize($("size").value));
+
+  // ---------- event links ----------
+  $("copyBtn").onclick = async () => {
+    try { await navigator.clipboard.writeText(location.href); $("copyBtn").textContent = t("copied"); }
+    catch(e) { window.prompt("Copy this link:", location.href); }
+    setTimeout(() => $("copyBtn").textContent = t("copyLink"), 2000);
+  };
+  $("newBtn").onclick = () => {
+    const id = Array.from(crypto.getRandomValues(new Uint8Array(6)), b => b.toString(36).padStart(2,"0")).join("").slice(0,10);
+    location.search = "?e=" + id;
+  };
+
+  // ---------- boot ----------
+  applyStatic();
+  render();
+  const saved = ls.get(NAME_KEY);
+  if (saved) { meName = saved; meId = idFor(saved); render(); }
+  else openModal();
+
+  if (!firebaseConfig || !firebaseConfig.projectId || String(firebaseConfig.apiKey||"").startsWith("PASTE")) {
+    notice("notSetUp");
+  } else {
+    db = getFirestore(initializeApp(firebaseConfig));
+    let slow = setTimeout(() => notice("slow"), 10000);
+    let gotPeople = false;
+    onSnapshot(collection(db, "events", EVENT, "people"), { includeMetadataChanges: false }, snap => {
+      const next = {};
+      snap.docs.forEach(d => { const v = d.data(); if (v) next[d.id] = v; });
+      people = next;
+      if (meId && !dirty) {
+        const mine = people[meId];
+        if (mine && Array.isArray(mine.dates)) myDates = new Set(mine.dates);
+        else if (!mine && !gotPeople && !snap.metadata.fromCache) scheduleSave();
+      }
+      if (!snap.metadata.fromCache) { gotPeople = true; clearTimeout(slow); if ($("notice").textContent === t("slow")) notice(null); }
+      render();
+      if ($("modal").classList.contains("show")) {
+        const typed = $("nameInput").value; openModal(); $("nameInput").value = typed;
+      }
+    }, (e) => { console.error(e); clearTimeout(slow); notice("slow"); });
+
+    onSnapshot(doc(db, "events", EVENT), snap => {
+      const v = snap.exists() ? snap.data() : null;
+      if (v) {
+        config = {
+          title: typeof v.title === "string" ? v.title.slice(0,60) : "",
+          groupSize: Math.max(2, Math.min(100, Number(v.groupSize) || 5))
+        };
+        render();
+      }
+    }, (e) => console.error(e));
+  }
+}
+</script>
+</body>
+</html>
