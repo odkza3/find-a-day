@@ -198,9 +198,7 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { firebaseConfig } from "./config.js";
+let initializeApp, getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot;
 {
   // ---------- i18n ----------
   const T = {
@@ -225,7 +223,9 @@ import { firebaseConfig } from "./config.js";
       defaultTitle:"Our get-together", picked:n=>`${n} day${n===1?"":"s"} picked`,
       lang:"中文", confirmRemove:"Tap again to confirm",
       copyLink:"Copy link", copied:"Link copied ✓", newEvent:"+ New event",
-      notSetUp:"The database isn't set up yet — open config.js and paste your Firebase settings (see README)."
+      notSetUp:"The database isn't set up yet — open config.js and paste your Firebase settings (see README).",
+      configBroken:"config.js has a mistake in it, so the page can't connect. It must start with  export const firebaseConfig = {  and contain only the settings — no import lines.",
+      fbLoad:"Couldn't load Firebase. Check your internet connection and refresh."
     },
     zh: {
       kicker:"約時間 · 搵日子", hi:"你好，", switch:"唔係你？", today:"今日",
@@ -248,7 +248,9 @@ import { firebaseConfig } from "./config.js";
       defaultTitle:"我哋嘅聚會", picked:n=>`已揀 ${n} 日`,
       lang:"EN", confirmRemove:"再按一次確認",
       copyLink:"複製連結", copied:"已複製連結 ✓", newEvent:"＋ 新活動",
-      notSetUp:"資料庫未設定——請打開 config.js 貼上你嘅 Firebase 設定（見 README）。"
+      notSetUp:"資料庫未設定——請打開 config.js 貼上你嘅 Firebase 設定（見 README）。",
+      configBroken:"config.js 有錯，所以連唔到資料庫。檔案要以  export const firebaseConfig = {  開頭，而且只放設定，唔好有 import 字句。",
+      fbLoad:"載入唔到 Firebase，請檢查網絡再重新整理。"
     }
   };
   const ls = {
@@ -570,8 +572,19 @@ import { firebaseConfig } from "./config.js";
   if (saved) { meName = saved; meId = idFor(saved); render(); }
   else openModal();
 
-  if (!firebaseConfig || !firebaseConfig.projectId || String(firebaseConfig.apiKey||"").startsWith("PASTE")) {
-    notice("notSetUp");
+  let firebaseConfig = null, setupErr = null;
+  try {
+    firebaseConfig = (await import("./config.js")).firebaseConfig;
+  } catch (e) { console.error(e); setupErr = "configBroken"; }
+  if (!setupErr && (!firebaseConfig || !firebaseConfig.projectId || String(firebaseConfig.apiKey||"").startsWith("PASTE"))) setupErr = "notSetUp";
+  if (!setupErr) {
+    try {
+      ({ initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"));
+      ({ getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"));
+    } catch (e) { console.error(e); setupErr = "fbLoad"; }
+  }
+  if (setupErr) {
+    notice(setupErr);
   } else {
     db = getFirestore(initializeApp(firebaseConfig));
     let slow = setTimeout(() => notice("slow"), 10000);
