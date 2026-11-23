@@ -6,13 +6,13 @@
 <title>約時間 · Find a Day</title>
 <meta name="description" content="Pick the days you are free and find the day that suits the most people.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Noto+Sans+TC:wght@400;500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f6f3ee; --card:#ffffff; --ink:#1f2a24; --muted:#6c7570; --line:#e6e1d8;
-    --accent:#1f7a55; --accent-ink:#ffffff; --mine:#e8a33d; --danger:#b5443a;
+    --bg:#F2F2F2; --card:#ffffff; --ink:#111111; --muted:#6e6e6e; --line:#e2e2e2;
+    --accent:#111111; --accent-ink:#ffffff; --mine:#111111; --danger:#9a2f2f;
     --h0:#ffffff; --radius:14px;
-    --font:"Inter","Noto Sans TC",system-ui,sans-serif;
+    --font:"Avenir Next","Avenir","Nunito Sans","Noto Sans TC",system-ui,sans-serif;
   }
   *{box-sizing:border-box}
   html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}
@@ -20,50 +20,55 @@
   input{font:inherit;color:inherit}
   .wrap{max-width:1180px;margin:0 auto;padding:24px 20px 48px}
   header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
-  .brand .kicker{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
-  .title-input{font-family:"DM Serif Display","Noto Sans TC",serif;font-size:34px;line-height:1.15;border:none;background:transparent;padding:2px 0;border-bottom:2px dashed transparent;width:min(560px,80vw);outline:none}
+  .brand .kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .title-input{font-family:var(--font);font-weight:700;letter-spacing:-.01em;font-size:34px;line-height:1.15;border:none;background:transparent;padding:2px 0;border-bottom:2px dashed transparent;width:min(560px,80vw);outline:none}
   .title-input:hover,.title-input:focus{border-bottom-color:var(--line)}
   .head-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
   .pill{display:inline-flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 8px 6px 14px;font-size:14px}
   .pill b{font-weight:600}
-  .pill button{border:none;background:#f0ece4;border-radius:999px;padding:4px 10px;font-size:13px}
+  .pill button{border:none;background:#ececec;border-radius:999px;padding:4px 10px;font-size:13px}
   .lang{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 12px;font-size:13px}
   .status{font-size:12px;color:var(--muted);min-width:60px;text-align:right}
 
   .layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
   @media (max-width:900px){.layout{grid-template-columns:1fr}}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
-  .notice{background:#fff6e5;border:1px solid #f0d9a8;color:#7a5a17;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:14px;display:none}
+  .notice{background:#ffffff;border:1px solid #d6d6d6;border-left:4px solid #111;color:#111;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:14px;display:none}
   .notice.show{display:block}
 
   .cal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-  .cal-top h2{margin:0;font-family:"DM Serif Display","Noto Sans TC",serif;font-weight:400;font-size:26px}
+  .cal-top h2{margin:0;font-family:var(--font);font-weight:600;font-size:24px;letter-spacing:-.01em}
   .nav{display:flex;gap:6px}
   .nav button{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:7px 12px;font-size:14px}
-  .nav button:hover{background:#f3efe8}
+  .nav button:hover{background:#efefef}
   .hint{font-size:13px;color:var(--muted);margin:0 0 10px}
   .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;user-select:none;-webkit-user-select:none}
   .dow{font-size:12px;color:var(--muted);text-align:center;padding:4px 0;font-weight:600}
   .day{position:relative;aspect-ratio:1/0.92;min-height:62px;border:1px solid var(--line);border-radius:12px;background:var(--h0);padding:6px 7px;text-align:left;display:flex;flex-direction:column;justify-content:space-between;transition:transform .06s ease, box-shadow .1s ease;touch-action:manipulation}
-  .day:hover{box-shadow:0 0 0 2px #cfc8bb inset}
+  .day:hover{box-shadow:0 0 0 2px #bdbdbd inset}
   .day .num{font-size:14px;font-weight:600}
-  .day .cnt{font-size:12px;font-weight:600;opacity:.85}
+  .day .cnt{font-size:12px;font-weight:600;opacity:.85;line-height:1}
+  .day .bottom{display:flex;flex-direction:column;gap:4px}
+  .dots{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+  .dots i{width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 1.5px #fff;display:block}
+  .dots em{font-style:normal;font-size:10px;font-weight:700;line-height:12px}
+  @media (max-width:600px){.dots i{width:8px;height:8px}.day{padding:5px}}
   .day.out{opacity:.35}
   .day.past{opacity:.35;cursor:not-allowed}
   .day.today .num{background:var(--ink);color:#fff;border-radius:999px;padding:0 7px;display:inline-block}
-  .day.mine{box-shadow:0 0 0 3px var(--mine) inset}
+  .day.mine{box-shadow:inset 0 0 0 2px #fff, inset 0 0 0 4px var(--mine)}
   .day.mine::after{content:"✓";position:absolute;top:5px;right:8px;font-size:13px;font-weight:700;color:var(--mine)}
   .day.dark{color:#fff}
-  .day.dark.mine::after{color:#ffd58a}
+  .day.dark.mine::after{color:#fff}
   .day.focus{outline:3px solid var(--ink);outline-offset:1px}
   .day.full .cnt::before{content:"★ "}
   .legend{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:12px;color:var(--muted);flex-wrap:wrap}
   .ramp{display:flex;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
   .ramp span{width:22px;height:12px}
-  .sw-mine{width:14px;height:14px;border-radius:4px;box-shadow:0 0 0 3px var(--mine) inset;display:inline-block}
+  .sw-mine{width:16px;height:16px;border-radius:4px;box-shadow:inset 0 0 0 2px #fff, inset 0 0 0 4px var(--mine);display:inline-block}
   .cal-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
   .btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 12px;font-size:13px}
-  .btn:hover{background:#f3efe8}
+  .btn:hover{background:#efefef}
   .btn.danger{color:var(--danger)}
 
   aside{display:flex;flex-direction:column;gap:16px;position:sticky;top:16px}
@@ -71,35 +76,35 @@
   aside h3{margin:0 0 10px;font-size:15px;font-weight:700}
   .size-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
   .stepper{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  .stepper button{border:none;background:#f3efe8;width:34px;height:34px;font-size:18px}
+  .stepper button{border:none;background:#efefef;width:34px;height:34px;font-size:18px}
   .stepper input{width:48px;border:none;text-align:center;font-weight:700;font-size:16px;outline:none;-moz-appearance:textfield}
   .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-  .progress{height:8px;background:#efeae1;border-radius:99px;overflow:hidden;margin-top:12px}
+  .progress{height:8px;background:#e6e6e6;border-radius:99px;overflow:hidden;margin-top:12px}
   .progress div{height:100%;background:var(--accent);border-radius:99px;transition:width .3s}
   .sub{font-size:13px;color:var(--muted);margin-top:6px}
   .rank{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
   .rank li button{width:100%;display:grid;grid-template-columns:26px 1fr auto;align-items:center;gap:10px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 10px;text-align:left}
-  .rank li button:hover,.rank li button.sel{border-color:var(--accent);background:#f2f8f4}
+  .rank li button:hover,.rank li button.sel{border-color:var(--ink);background:#f6f6f6}
   .rank .pos{font-weight:700;color:var(--muted);font-size:13px;text-align:center}
   .rank li:first-child .pos{color:var(--accent)}
   .rank .date{font-weight:600;font-size:14px}
-  .rank .bar{height:5px;background:#efeae1;border-radius:9px;margin-top:5px;overflow:hidden}
+  .rank .bar{height:5px;background:#e6e6e6;border-radius:9px;margin-top:5px;overflow:hidden}
   .rank .bar i{display:block;height:100%;background:var(--accent)}
   .rank .n{font-weight:700;font-size:14px;white-space:nowrap}
   .rank .n small{color:var(--muted);font-weight:500}
   .empty{font-size:14px;color:var(--muted);line-height:1.5}
   .names{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px 4px 4px;border-radius:999px;background:#f3efe8}
-  .chip .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px 4px 4px;border-radius:999px;background:#efefef}
+  .chip .av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;color:#111;font-size:11px;font-weight:700;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
   .chip.off{opacity:.45}
-  .chip.me{background:#fdf0da}
+  .chip.me{background:#dcdcdc}
   .detail-h{font-weight:700;font-size:15px;margin-bottom:8px}
   .lbl{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:10px 0 6px;font-weight:600}
 
   .modal-bg{position:fixed;inset:0;background:rgba(31,42,36,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
   .modal-bg.show{display:flex}
   .modal{background:#fff;border-radius:18px;padding:28px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-  .modal h2{font-family:"DM Serif Display","Noto Sans TC",serif;font-weight:400;font-size:28px;margin:0 0 6px}
+  .modal h2{font-family:var(--font);font-weight:700;font-size:26px;margin:0 0 6px}
   .modal p{color:var(--muted);font-size:14px;margin:0 0 18px;line-height:1.5}
   .modal input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;font-size:16px;outline:none}
   .modal input:focus{border-color:var(--accent)}
@@ -204,7 +209,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot;
   const T = {
     en: {
       kicker:"約時間 · Find a day", hi:"Hi,", switch:"Not you?", today:"Today",
-      tapHint:"Tap (or drag) across every day you're free. Darker green = more people free.",
+      tapHint:"Tap (or drag) across every day you're free. Darker = more people free.",
       fewer:"Fewer free", more:"More free", yours:"Your picks",
       clearMine:"Clear my days", removeMe:"Remove me from the list",
       groupSize:"Group size", bestDays:"Best days",
@@ -287,14 +292,30 @@ let initializeApp, getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot;
     const bytes = new TextEncoder().encode(name.trim().toLowerCase());
     return "p-" + Array.from(bytes, b => b.toString(16).padStart(2,"0")).join("");
   }
-  const COLORS = ["#1f7a55","#c2603a","#3b6fb6","#8a4fb0","#b08a1f","#2f8f9a","#b5446e","#5b7a2a","#7a5a3a","#4a4fb0"];
-  function colorFor(id){ let h=0; for(const c of id) h=(h*31+c.charCodeAt(0))>>>0; return COLORS[h%COLORS.length]; }
+  // Pastel palette: each person gets their own colour (unique while there are colours left).
+  const PASTELS = ["#FFB3BA","#BAE1FF","#BAFFC9","#FFF3B0","#D7BAFF","#FFD6A5","#A0E7E5","#F1C0E8",
+                   "#C7CEEA","#E2F0CB","#FBC4AB","#B5EAD7","#FFC8E8","#CFBAF0","#D4E09B","#9ED8F5"];
+  const hashOf = id => { let h=0; for (const c of id) h=(h*31+c.charCodeAt(0))>>>0; return h; };
+  let colorMap = {};
+  function assignColors(ids){
+    // Each person starts at their own hashed slot and moves along if it's taken,
+    // so colours stay the same for people as others join.
+    const map = {}, used = new Set();
+    for (const id of [...ids].sort()) {
+      let slot = hashOf(id) % PASTELS.length, tries = 0;
+      while (used.has(slot) && tries < PASTELS.length) { slot = (slot+1) % PASTELS.length; tries++; }
+      if (tries < PASTELS.length) { used.add(slot); map[id] = PASTELS[slot]; }
+      else map[id] = `hsl(${(hashOf(id)*137.5)%360} 75% 82%)`; // more people than palette colours
+    }
+    colorMap = map;
+  }
+  const colorFor = id => colorMap[id] || PASTELS[hashOf(id) % PASTELS.length];
   const initial = n => esc(Array.from(n.trim())[0] || "?").toUpperCase();
 
   // Heat ramp: white -> deep green
   function heat(ratio){
     if (ratio <= 0) return "#ffffff";
-    const a=[232,245,236], b=[18,92,62];
+    const a=[226,226,226], b=[17,17,17];
     const r = Math.min(1, ratio);
     const mix = a.map((v,i)=>Math.round(v+(b[i]-v)*r));
     return `rgb(${mix.join(",")})`;
@@ -331,6 +352,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot;
     const list = allPeople();
     const c = counts(list);
     const size = effSize(list);
+    assignColors(list.map(p=>p.id));
 
     if (document.activeElement !== $("title")) $("title").value = config.title || t("defaultTitle");
     if (document.activeElement !== $("size")) $("size").value = config.groupSize;
@@ -357,7 +379,8 @@ let initializeApp, getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot;
       if (k === focusKey) cls.push("focus");
       html += `<button class="${cls.join(" ")}" data-k="${k}" style="background:${heat(ratio)}" aria-pressed="${myDates.has(k)}" aria-label="${k}: ${n}/${size}">
         <span><span class="num">${d.getDate()}</span></span>
-        <span class="cnt">${n?`${n}/${size}`:""}</span></button>`;
+        <span class="bottom">${n?`<span class="dots">${(c[k]||[]).slice(0,10).map(p=>`<i style="background:${colorFor(p.id)}" title="${esc(p.name)}"></i>`).join("")}${n>10?`<em>+${n-10}</em>`:""}</span>`:""}
+        <span class="cnt">${n?`${n}/${size}`:""}</span></span></button>`;
     }
     $("grid").innerHTML = html;
 
@@ -467,6 +490,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, deleteDoc, onSnapshot;
   function openModal(){
     $("nameInput").value = "";
     const list = Object.entries(people).filter(([,p])=>p&&p.name).map(([id,p])=>({id,name:String(p.name)}));
+    assignColors(list.map(p=>p.id));
     $("existingWrap").style.display = list.length ? "" : "none";
     $("existing").innerHTML = list.map(p=>`<button type="button" class="chip" data-name="${esc(p.name)}"><span class="av" style="background:${colorFor(p.id)}">${initial(p.name)}</span>${esc(p.name)}</button>`).join("");
     $("modal").classList.add("show");
