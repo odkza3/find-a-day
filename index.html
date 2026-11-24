@@ -488,7 +488,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       open:"Open", removeFromList:"Remove from this list",
       youFree:"You're free ✓", youNotPicked:"You didn't pick this day", peopleFree:(n,m)=>`${n}/${m} people free`, isTop:"★ Top day",
       noEvents:"No events yet. Create one, or open an event link a friend sent you.",
-      evGone:"This event no longer exists", loading:"Loading…", viewing:"Viewing", avTitle:"Change your icon", pickIcon:"Pick your icon", avDone:"Done", changeIcon:"Change icon", seeAll:"See all on one calendar →", confirmBtn:d=>`Confirm ${d}`, confirmPick:"Confirm a day", confirmHint:"Tap one of the days above, then confirm it.",
+      evGone:"This event no longer exists", loading:"Loading…", viewing:"Viewing", avTitle:"Change your icon", pickIcon:"Pick your icon", avDone:"Done", changeIcon:"Change icon", seeAll:"See all on one calendar →", confirmBtn:d=>`Confirm ${d}`, confirmPick:"Confirm a day", confirmHint:"Tap a day above or on the calendar, then confirm it.",
       confirmedNote:d=>`Confirmed: ${d}`, unconfirm:"Undo confirm", confirmedTag:"✔ Confirmed", legendConfirmed:"Confirmed day",
       notConfirmed:"No day confirmed yet", cmpConfirmedHere:"✔ Confirmed for this day", viewingPerson:n=>`Showing the days ${n} picked`, showAll:"✕ Show everyone", seeDays:"Tap to see their days on the calendar"
     },
@@ -539,7 +539,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       open:"打開", removeFromList:"喺呢個列表移除",
       youFree:"你得閒 ✓", youNotPicked:"你冇揀呢日", peopleFree:(n,m)=>`${n}/${m} 人得閒`, isTop:"★ 最多人得閒",
       noEvents:"暫時未有活動。建立一個，或者打開朋友傳畀你嘅連結。",
-      evGone:"呢個活動已經唔存在", loading:"載入中…", viewing:"而家睇緊", avTitle:"改頭像", pickIcon:"揀個頭像", avDone:"完成", changeIcon:"改頭像", seeAll:"喺同一個日曆睇晒 →", confirmBtn:d=>`確認 ${d}`, confirmPick:"確認日子", confirmHint:"喺上面揀一日，再按確認。",
+      evGone:"呢個活動已經唔存在", loading:"載入中…", viewing:"而家睇緊", avTitle:"改頭像", pickIcon:"揀個頭像", avDone:"完成", changeIcon:"改頭像", seeAll:"喺同一個日曆睇晒 →", confirmBtn:d=>`確認 ${d}`, confirmPick:"確認日子", confirmHint:"喺上面或者日曆揀一日，再按確認。",
       confirmedNote:d=>`已確認：${d}`, unconfirm:"取消確認", confirmedTag:"✔ 已確認", legendConfirmed:"已確認嘅日子",
       notConfirmed:"未確認日子", cmpConfirmedHere:"✔ 已確認係呢日", viewingPerson:n=>`顯示緊 ${n} 揀咗嘅日子`, showAll:"✕ 睇返全部人", seeDays:"撳一下，喺日曆睇佢揀咗邊幾日"
     }
@@ -607,7 +607,8 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
   let dirty = false;
   let view = new Date(today.getFullYear(), today.getMonth(), 1);
   let focusKey = null;
-  let viewPerson = null;   // id of the person whose days are shown on the calendar
+  let viewPerson = null;
+  let confirmPick = null;  // day chosen (by click, not hover) for the Confirm button   // id of the person whose days are shown on the calendar
   const validDay = d => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d);
   const confirmedDay = () => ev && validDay(ev.confirmed) ? ev.confirmed : null;
   const isAdmin = () => !!ev; // everyone in the group can edit the event info
@@ -769,7 +770,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       .slice(0,3);
     const dfmt = new Intl.DateTimeFormat(locale(), { weekday:"short", day:"numeric", month:"short" });
     $("rank").innerHTML = ranked.length ? ranked.map(([k,ps],i)=>`
-      <li><button data-k="${k}" class="${k===focusKey?"sel":""} ${k===confirmedDay()?"allfree":""}">
+      <li><button data-k="${k}" class="${k===confirmPick?"sel":""} ${k===confirmedDay()?"allfree":""}">
         <span class="pos">${i+1}</span>
         <span><div class="date">${esc(dfmt.format(parseKey(k)))}</div>
           <div class="bar"><i style="width:${Math.min(100,ps.length/size*100)}%"></i></div></span>
@@ -779,8 +780,9 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
 
     // confirm a day
     const conf = confirmedDay();
-    const sel = ranked.some(([k]) => k === focusKey) ? focusKey : null;
-    $("confirmRow").hidden = !ev || (!ranked.length && !conf);
+    // any upcoming day the person clicked (in the top 3 or on the calendar) can be confirmed
+    const sel = confirmPick && confirmPick >= todayKey ? confirmPick : null;
+    $("confirmRow").hidden = !ev;
     const cb = $("confirmBtn");
     cb.classList.remove("undo");
     if (sel && sel !== conf) {
@@ -1079,6 +1081,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
   $("grid").addEventListener("pointerdown", e => {
     const b = e.target.closest(".day"); if (!b) return;
     const k = b.dataset.k;
+    if (k >= todayKey) confirmPick = k;
     if (k < todayKey || !ev || (meId && !canPick())) { focusKey = k; render(); if (meId && ev && k >= todayKey && !canPick()) nudgeEdit(); return; }
     const mode = !myDates.has(k);
     toggleDay(k, mode);
@@ -1101,14 +1104,15 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
   });
   $("rank").addEventListener("click", e => {
     const b = e.target.closest("button[data-k]"); if (!b) return;
-    focusKey = b.dataset.k;
+    focusKey = b.dataset.k; confirmPick = b.dataset.k;
     const d = parseKey(focusKey); view = new Date(d.getFullYear(), d.getMonth(), 1);
     render();
   });
   $("confirmBtn").onclick = () => {
     const act = $("confirmBtn").dataset.act; if (!act || !ev) return;
-    const val = act === "set" ? focusKey : "";
-    ev = { ...ev, confirmed: val }; render();
+    const val = act === "set" ? confirmPick : "";
+    if (act === "set" && !validDay(val)) return;
+    ev = { ...ev, confirmed: val }; confirmPick = null; render();
     saveEvent({ confirmed: val }, true);
   };
   $("prev").onclick = () => { view = new Date(view.getFullYear(), view.getMonth()-1, 1); render(); };
