@@ -88,6 +88,10 @@
   .btn.danger{color:var(--danger)}
   .icon-btn{display:inline-flex;align-items:center;gap:6px}
   .cal-actions{align-items:center}
+  .submit-btn.edit{background:#fff;color:var(--ink);border:1.5px solid #888888}
+  .submit-btn.edit:hover{background:#f3f3f3 !important}
+  .submit-btn.nudge{animation:nudge .45s}
+  @keyframes nudge{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
   .submit-btn{margin-left:auto;background:#888888;color:#fff;border:none;border-radius:10px;padding:10px 22px;font-size:14px;font-weight:600}
   .submit-btn:hover:not(:disabled){background:#777}
   .submit-btn:disabled{opacity:.4;cursor:default}
@@ -114,7 +118,12 @@
   .mgrid .mday.out,.mgrid .mday.past{opacity:.35}
   .mgrid .mday.today .num{background:var(--ink);color:#fff;border-radius:999px;padding:0 7px;align-self:flex-start}
   .mgrid .mday.focus{outline:3px solid var(--ink);outline-offset:1px}
-  .mgrid .mday.clash{box-shadow:inset 0 0 0 2.5px #FF7BAC;background:#FFF1F6}
+  .mgrid .mday.conf{border-color:#EF6F3C;box-shadow:inset 0 0 0 2px #EF6F3C}
+  .mgrid .mday.conf::after{content:"✔";position:absolute;top:6px;right:8px;font-size:12px;font-weight:700;color:#EF6F3C}
+  .mgrid .mday.conf.clash::after{content:none}
+  .tag.ctagm{background:color-mix(in srgb,var(--c) 24%,#fff);color:var(--ink);border-left:3px solid var(--c)}
+  .cpill{display:inline-block;background:#EF6F3C;color:#fff;font-weight:700;font-size:11px;border-radius:5px;padding:1px 7px;margin-top:2px}
+  .mgrid .mday.clash{box-shadow:inset 0 0 0 3px #FF7BAC}
   .tag{display:block;font-size:11px;line-height:1.35;padding:2px 6px;border-radius:5px;background:color-mix(in srgb,var(--c) 24%,#fff);border-left:3px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--ink)}
   .tag.ghost{background:#fff;border:1px dashed var(--c);border-left:3px solid var(--c);color:var(--muted)}
   .clash-label{font-size:10px;font-weight:700;background:#FF7BAC;color:#111;border-radius:4px;padding:1px 5px;display:inline-block}
@@ -135,6 +144,7 @@
   @media (max-width:600px){
     .mgrid .mday{min-height:64px;padding:4px}
     .mgrid .tag{font-size:0;height:6px;padding:0;border:none;border-radius:3px;background:var(--c)}
+    .mgrid .tag.ctagm{background:var(--c);box-shadow:none}
     .mgrid .tag.ghost{background:transparent;border:1.5px solid var(--c)}
     .mday .clash-label{font-size:8px;padding:0 3px;top:4px;right:4px}
   }
@@ -150,6 +160,19 @@
   .rank li button.allfree .pos,.rank li button.allfree .n small{color:rgba(255,255,255,.85)}
   .rank li button.allfree .bar{background:rgba(255,255,255,.35)}
   .rank li button.allfree .bar i{background:#fff}
+  .rank .ctag{display:inline-block;font-size:10px;font-weight:700;background:#fff;color:#EF6F3C;border-radius:4px;padding:1px 5px;margin-right:6px;vertical-align:middle}
+  .confirm-row{display:flex;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+  .confirm-note{font-size:13px;color:var(--muted);flex:1;min-width:120px}
+  .confirm-btn{margin-left:auto;border:none;background:#111;color:#fff;border-radius:10px;padding:9px 16px;font-size:14px;font-weight:600}
+  .confirm-btn:hover:not(:disabled){background:#333}
+  .confirm-btn:disabled{opacity:.35;cursor:default}
+  .confirm-btn.undo{background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:500}
+  .day.confirmed{background:#EF6F3C;border-color:#EF6F3C;color:#fff}
+  .day.confirmed .cnt{color:#fff}
+  .day.confirmed.mine::after{color:#fff}
+  .day .clabel{font-size:10px;font-weight:700;background:#fff;color:#EF6F3C;border-radius:4px;padding:1px 5px;align-self:flex-start;line-height:1.3}
+  .sw-outline{background:#fff;border:2px solid #EF6F3C;color:#EF6F3C;display:inline-grid;place-items:center;font-size:10px;font-weight:700}
+  .sw-conf{display:inline-grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
   .rank .pos{font-weight:700;color:var(--muted);font-size:13px;text-align:center}
   .rank li:first-child .pos{color:var(--ink)}
   .rank .date{font-weight:600;font-size:14px}
@@ -250,7 +273,7 @@
           <button id="next" aria-label="Next month">›</button>
         </div>
       </div>
-      <p class="hint" data-t="tapHint"></p>
+      <p class="hint" id="tapHintEl"></p>
       <div class="pv-bar" id="pvBar" hidden><span class="pv-sw" id="pvSw"></span><span id="pvText"></span><button type="button" id="pvClose" data-t="showAll"></button></div>
       <div class="grid" id="dow"></div>
       <div class="grid" id="grid" style="margin-top:6px"></div>
@@ -258,6 +281,7 @@
         <span class="sw"></span><span data-t="yours"></span>
         <span class="sw sw-others"></span><span data-t="othersDays"></span>
         <span class="sw sw-all"></span><span data-t="allFreeDays"></span>
+        <span id="legConfirmed" hidden><span class="sw sw-all sw-conf">✔</span><span data-t="legendConfirmed"></span></span>
       </div>
       <div class="cal-actions">
         <button class="btn icon-btn" id="clearBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg><span data-t="clearMine"></span></button>
@@ -271,6 +295,10 @@
       <div class="card">
         <h3 data-t="bestDays"></h3>
         <ul class="rank" id="rank"></ul>
+        <div class="confirm-row" id="confirmRow" hidden>
+          <span class="confirm-note" id="confirmNote"></span>
+          <button type="button" class="confirm-btn" id="confirmBtn"></button>
+        </div>
       </div>
 
       <div class="card" id="detailCard">
@@ -319,8 +347,7 @@
       <div class="grid" id="myDow"></div>
       <div class="grid mgrid" id="myGrid" style="margin-top:6px"></div>
       <div class="legend">
-        <span class="tag" style="--c:#888;display:inline-block;width:auto" data-t="legendPicked"></span>
-        <span class="tag ghost" style="--c:#888;display:inline-block;width:auto">★ <span data-t="legendTop"></span></span>
+        <span class="sw sw-outline">✔</span><span data-t="legendConfirmed"></span>
         <span class="clash-label" data-t="clashTag"></span><span data-t="legendClash"></span>
       </div>
     </section>
@@ -418,7 +445,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       kicker:"約時間 · Find a day", hi:"Hi,", switch:"Not you?", today:"Today",
       tapHint:"Tap (or drag) across every day you're free, then press Submit.",
       yours:"Your days", allFreeDays:"Everyone's free!", othersDays:"Others picked", dotsMean:"Each dot is one person who's free",
-      clearMine:"Clear", submit:"Submit", submitted:"Submitted ✓", removeMe:"Remove me from the list",
+      clearMine:"Clear", submit:"Submit", submitted:"Submitted ✓", editDays:"✎ Edit my days", doneEditing:"Done", lockedHint:"You've submitted your days. Press \"Edit my days\" to change them.", removeMe:"Remove me from the list",
       groupSize:"Group size", responses:"Responses", people:n=>`${n} people`, bestDays:"Top 3 days",
       responded:(n,m)=>`(${n} of ${m} people have responded)`,
       noData:"No one has picked any days yet. Pick the days you're free on the calendar.",
@@ -451,8 +478,8 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       createNew:"Create a new event",
       myEventsBtn:"My events", seeMyEvents:"Or see my events", myEvents:"My events",
       myEventsHint:"Every event you've opened on this device, on one calendar.",
-      myHint:"Coloured tags show the days you picked in each event. ★ marks each event's top day.",
-      legendPicked:"Days you picked", legendTop:"Event's top day", clashTag:"Clash", legendClash:"2+ events' top days on the same day",
+      myHint:"Days with an orange outline are confirmed, labelled with the event. Events without a confirmed day don't appear on the calendar.",
+      legendPicked:"Days you picked", legendTop:"Event's top day", clashTag:"Clash", legendClash:"2+ events confirmed on the same day",
       clashTitle:"Clashes", noClash:"No clashes right now 👍", clashMany:n=>`${n} events have their top day here`,
       compareTitle:"Compare a day", myDayHint:"Hover or tap a day to compare your events.",
       eventsTitle:"Events", evCount:n=>`(${n})`,
@@ -461,13 +488,15 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       open:"Open", removeFromList:"Remove from this list",
       youFree:"You're free ✓", youNotPicked:"You didn't pick this day", peopleFree:(n,m)=>`${n}/${m} people free`, isTop:"★ Top day",
       noEvents:"No events yet. Create one, or open an event link a friend sent you.",
-      evGone:"This event no longer exists", loading:"Loading…", viewing:"Viewing", avTitle:"Change your icon", pickIcon:"Pick your icon", avDone:"Done", changeIcon:"Change icon", seeAll:"See all on one calendar →", viewingPerson:n=>`Showing the days ${n} picked`, showAll:"✕ Show everyone", seeDays:"Tap to see their days on the calendar"
+      evGone:"This event no longer exists", loading:"Loading…", viewing:"Viewing", avTitle:"Change your icon", pickIcon:"Pick your icon", avDone:"Done", changeIcon:"Change icon", seeAll:"See all on one calendar →", confirmBtn:d=>`Confirm ${d}`, confirmPick:"Confirm a day", confirmHint:"Tap one of the days above, then confirm it.",
+      confirmedNote:d=>`Confirmed: ${d}`, unconfirm:"Undo confirm", confirmedTag:"✔ Confirmed", legendConfirmed:"Confirmed day",
+      notConfirmed:"No day confirmed yet", cmpConfirmedHere:"✔ Confirmed for this day", viewingPerson:n=>`Showing the days ${n} picked`, showAll:"✕ Show everyone", seeDays:"Tap to see their days on the calendar"
     },
     zh: {
       kicker:"約時間 · 搵日子", hi:"你好，", switch:"唔係你？", today:"今日",
       tapHint:"點選（或拖拉）所有你得閒嘅日子，然後按「提交」。",
       yours:"你揀咗嘅日子", allFreeDays:"全部人都得閒!", othersDays:"其他人揀咗", dotsMean:"每粒圓點代表一個得閒嘅人",
-      clearMine:"清除", submit:"提交", submitted:"已提交 ✓", removeMe:"將我從名單移除",
+      clearMine:"清除", submit:"提交", submitted:"已提交 ✓", editDays:"✎ 修改", doneEditing:"完成", lockedHint:"你已經提交咗。想改日子就按「修改」。", removeMe:"將我從名單移除",
       groupSize:"總人數", responses:"回覆進度", people:n=>`${n} 人`, bestDays:"最多人得閒（頭 3 名）",
       responded:(n,m)=>`（${m} 人之中已有 ${n} 人回覆）`,
       noData:"仲未有人揀日子。喺日曆上揀你得閒嘅日子啦。",
@@ -500,8 +529,8 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       createNew:"建立新活動",
       myEventsBtn:"我嘅活動", seeMyEvents:"或者睇我嘅活動", myEvents:"我嘅活動",
       myEventsHint:"喺呢部機打開過嘅所有活動，放埋喺同一個日曆。",
-      myHint:"色條代表你喺每個活動揀咗嘅日子，★ 係嗰個活動最多人得閒嘅日子。",
-      legendPicked:"你揀咗嘅日子", legendTop:"活動最多人得閒", clashTag:"撞期", legendClash:"兩個或以上活動嘅最多人得閒日子撞埋同一日",
+      myHint:"橙色框係已確認嘅日子，上面寫住係邊個活動。未確認嘅活動唔會喺日曆出現。",
+      legendPicked:"你揀咗嘅日子", legendTop:"活動最多人得閒", clashTag:"撞期", legendClash:"兩個或以上活動確認咗同一日",
       clashTitle:"撞期提示", noClash:"暫時冇撞期 👍", clashMany:n=>`${n} 個活動最多人得閒都係呢日`,
       compareTitle:"比較同一日", myDayHint:"將滑鼠移到或點一下日子，比較你嘅活動。",
       eventsTitle:"活動", evCount:n=>`（${n}）`,
@@ -510,7 +539,9 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       open:"打開", removeFromList:"喺呢個列表移除",
       youFree:"你得閒 ✓", youNotPicked:"你冇揀呢日", peopleFree:(n,m)=>`${n}/${m} 人得閒`, isTop:"★ 最多人得閒",
       noEvents:"暫時未有活動。建立一個，或者打開朋友傳畀你嘅連結。",
-      evGone:"呢個活動已經唔存在", loading:"載入中…", viewing:"而家睇緊", avTitle:"改頭像", pickIcon:"揀個頭像", avDone:"完成", changeIcon:"改頭像", seeAll:"喺同一個日曆睇晒 →", viewingPerson:n=>`顯示緊 ${n} 揀咗嘅日子`, showAll:"✕ 睇返全部人", seeDays:"撳一下，喺日曆睇佢揀咗邊幾日"
+      evGone:"呢個活動已經唔存在", loading:"載入中…", viewing:"而家睇緊", avTitle:"改頭像", pickIcon:"揀個頭像", avDone:"完成", changeIcon:"改頭像", seeAll:"喺同一個日曆睇晒 →", confirmBtn:d=>`確認 ${d}`, confirmPick:"確認日子", confirmHint:"喺上面揀一日，再按確認。",
+      confirmedNote:d=>`已確認：${d}`, unconfirm:"取消確認", confirmedTag:"✔ 已確認", legendConfirmed:"已確認嘅日子",
+      notConfirmed:"未確認日子", cmpConfirmedHere:"✔ 已確認係呢日", viewingPerson:n=>`顯示緊 ${n} 揀咗嘅日子`, showAll:"✕ 睇返全部人", seeDays:"撳一下，喺日曆睇佢揀咗邊幾日"
     }
   };
   const ls = {
@@ -577,6 +608,8 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
   let view = new Date(today.getFullYear(), today.getMonth(), 1);
   let focusKey = null;
   let viewPerson = null;   // id of the person whose days are shown on the calendar
+  const validDay = d => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d);
+  const confirmedDay = () => ev && validDay(ev.confirmed) ? ev.confirmed : null;
   const isAdmin = () => !!ev; // everyone in the group can edit the event info
 
   function idFor(name){
@@ -692,6 +725,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
     $("pvBar").hidden = !vp;
     if (vp) { $("pvText").innerHTML = t("viewingPerson", `<b>${esc(vp.name)}</b>`); $("pvSw").style.background = colorFor(vp.id); }
     $("eventView").querySelector(".legend").hidden = !!vp;
+    $("legConfirmed").hidden = !confirmedDay();
     const first = new Date(view.getFullYear(), view.getMonth(), 1);
     const start = new Date(first); start.setDate(1 - first.getDay());
     let html = "";
@@ -714,12 +748,13 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
         if (myDates.has(k)) cls.push("mine");
         else if (n > 0) cls.push("others");
         if (n>0 && n>=size) cls.push("full");
+        if (k === confirmedDay()) cls.push("confirmed");
       }
       if (k === focusKey) cls.push("focus");
       const dots = "";
       html += `<button class="${cls.join(" ")}" style="${style}" data-k="${k}" aria-pressed="${myDates.has(k)}" aria-label="${k}: ${n}/${size}">
         <span><span class="num">${d.getDate()}</span></span>
-        <span class="bottom">${dots}<span class="cnt">${n?`${n}/${size}`:""}</span></span></button>`;
+        <span class="bottom">${dots}${!vp && k === confirmedDay() ? `<span class="clabel">${esc(t("confirmedTag"))}</span>` : ""}<span class="cnt">${n?`${n}/${size}`:""}</span></span></button>`;
     }
     $("grid").innerHTML = html;
 
@@ -734,13 +769,30 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       .slice(0,3);
     const dfmt = new Intl.DateTimeFormat(locale(), { weekday:"short", day:"numeric", month:"short" });
     $("rank").innerHTML = ranked.length ? ranked.map(([k,ps],i)=>`
-      <li><button data-k="${k}" class="${k===focusKey?"sel":""} ${ps.length>=size?"allfree":""}">
+      <li><button data-k="${k}" class="${k===focusKey?"sel":""} ${k===confirmedDay()?"allfree":""}">
         <span class="pos">${i+1}</span>
         <span><div class="date">${esc(dfmt.format(parseKey(k)))}</div>
           <div class="bar"><i style="width:${Math.min(100,ps.length/size*100)}%"></i></div></span>
-        <span class="n">${ps.length}<small>/${size}</small>${ps.length>=size?" ★":""}</span>
+        <span class="n">${k===confirmedDay()?`<span class="ctag">${esc(t("confirmedTag"))}</span>`:""}${ps.length}<small>/${size}</small>${ps.length>=size?" ★":""}</span>
       </button></li>`).join("")
       : `<li class="empty">${esc(t("noData"))}</li>`;
+
+    // confirm a day
+    const conf = confirmedDay();
+    const sel = ranked.some(([k]) => k === focusKey) ? focusKey : null;
+    $("confirmRow").hidden = !ev || (!ranked.length && !conf);
+    const cb = $("confirmBtn");
+    cb.classList.remove("undo");
+    if (sel && sel !== conf) {
+      cb.disabled = false; cb.textContent = t("confirmBtn", dfmt.format(parseKey(sel))); cb.dataset.act = "set";
+      $("confirmNote").textContent = conf ? t("confirmedNote", dfmt.format(parseKey(conf))) : "";
+    } else if (conf) {
+      cb.disabled = false; cb.textContent = t("unconfirm"); cb.dataset.act = "clear"; cb.classList.add("undo");
+      $("confirmNote").textContent = t("confirmedNote", dfmt.format(parseKey(conf)));
+    } else {
+      cb.disabled = true; cb.textContent = t("confirmPick"); cb.dataset.act = "";
+      $("confirmNote").textContent = t("confirmHint");
+    }
 
     renderDetail(list, c, size);
 
@@ -754,6 +806,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
 
     const canAct = !!(meId && ev && authOk);
     $("clearBtn").disabled = $("removeBtn").disabled = !canAct;
+    if (canAct && !canPick()) $("clearBtn").disabled = true;
     updateSubmit();
   }
 
@@ -793,19 +846,32 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
   // ---------- writes ----------
   let saveTimer = null, writing = Promise.resolve();
   // Picks stay on this device until the person taps Submit.
+  // After someone has submitted, their days are locked until they press Edit.
+  let editing = false;
+  const hasSubmitted = () => !!(meId && people[meId] && Array.isArray(people[meId].dates) && people[meId].dates.length);
+  const canPick = () => !hasSubmitted() || editing || dirty;
   function updateSubmit(){
     const b = $("submitBtn");
+    $("tapHintEl").textContent = meId && !canPick() ? t("lockedHint") : t("tapHint");
     if (b.classList.contains("done") && !dirty) return;
     b.classList.remove("done");
-    b.textContent = t("submit");
-    b.disabled = !(dirty && meId && ev && authOk);
+    const locked = meId && ev && !canPick();
+    b.classList.toggle("edit", !!locked);
+    if (locked) { b.textContent = t("editDays"); b.disabled = false; b.dataset.mode = "edit"; }
+    else if (editing && !dirty) { b.textContent = t("doneEditing"); b.disabled = false; b.dataset.mode = "done"; }
+    else { b.textContent = t("submit"); b.disabled = !(dirty && meId && ev && authOk); b.dataset.mode = "submit"; }
+  }
+  function nudgeEdit(){
+    const b = $("submitBtn"); b.classList.remove("nudge"); void b.offsetWidth; b.classList.add("nudge");
   }
   function markChanged(){ dirty = true; render(); }
   $("submitBtn").onclick = () => {
-    if (!dirty) return;
     const b = $("submitBtn");
+    if (b.dataset.mode === "edit") { editing = true; render(); return; }
+    if (b.dataset.mode === "done") { editing = false; render(); return; }
+    if (!dirty) return;
     b.disabled = true; b.textContent = t("saving");
-    saveMine(() => { b.classList.add("done"); b.textContent = t("submitted"); setTimeout(() => { b.classList.remove("done"); updateSubmit(); }, 2500); },
+    saveMine(() => { editing = false; b.classList.add("done"); b.textContent = t("submitted"); setTimeout(() => { b.classList.remove("done"); updateSubmit(); }, 2500); },
              () => { b.textContent = t("submit"); b.disabled = false; });
   };
   window.addEventListener("beforeunload", e => { if (dirty) { e.preventDefault(); e.returnValue = ""; } });
@@ -1002,6 +1068,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
     if (!ev) return;
     if (!meId) { openNameModal(); return; }
     if (k < todayKey) return;
+    if (!canPick()) { focusKey = k; render(); nudgeEdit(); return; }
     const has = myDates.has(k);
     const want = mode ?? !has;
     if (want === has) return;
@@ -1012,7 +1079,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
   $("grid").addEventListener("pointerdown", e => {
     const b = e.target.closest(".day"); if (!b) return;
     const k = b.dataset.k;
-    if (k < todayKey || !ev) { focusKey = k; render(); return; }
+    if (k < todayKey || !ev || (meId && !canPick())) { focusKey = k; render(); if (meId && ev && k >= todayKey && !canPick()) nudgeEdit(); return; }
     const mode = !myDates.has(k);
     toggleDay(k, mode);
     if (e.pointerType === "mouse") drag = { mode };
@@ -1037,13 +1104,18 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
     focusKey = b.dataset.k;
     const d = parseKey(focusKey); view = new Date(d.getFullYear(), d.getMonth(), 1);
     render();
-    if (window.innerWidth <= 900) $("detailCard").scrollIntoView({behavior:"smooth", block:"start"});
   });
+  $("confirmBtn").onclick = () => {
+    const act = $("confirmBtn").dataset.act; if (!act || !ev) return;
+    const val = act === "set" ? focusKey : "";
+    ev = { ...ev, confirmed: val }; render();
+    saveEvent({ confirmed: val }, true);
+  };
   $("prev").onclick = () => { view = new Date(view.getFullYear(), view.getMonth()-1, 1); render(); };
   $("next").onclick = () => { view = new Date(view.getFullYear(), view.getMonth()+1, 1); render(); };
   $("todayBtn").onclick = () => { view = new Date(today.getFullYear(), today.getMonth(), 1); render(); };
   $("langBtn").onclick = () => { lang = lang==="en"?"zh":"en"; ls.set("yt-lang", lang); applyStatic(); render(); };
-  $("switchBtn").onclick = () => { dirty = false; meId = meName = null; myDates = new Set(); ls.del(nameKey()); render(); openNameModal(); };
+  $("switchBtn").onclick = () => { dirty = false; editing = false; meId = meName = null; myDates = new Set(); ls.del(nameKey()); render(); openNameModal(); };
   $("nameForm").addEventListener("submit", e => { e.preventDefault(); if (!$("nameInput").value.trim()) return; useIcon(pickAv); setMe($("nameInput").value); });
   $("existing").addEventListener("click", e => { const b = e.target.closest("[data-name]"); if (b) setMe(b.dataset.name); });
   $("newBtn").onclick = () => nav(location.pathname);
@@ -1164,7 +1236,8 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
         color: EVCOLORS[(item.c || 0) % EVCOLORS.length], size, counts,
         top: best ? { k: best[0], n: best[1] } : null,
         mine: new Set(me && Array.isArray(me.dates) ? me.dates : []), joined: !!me,
-        missing: !!d.missing, loaded: !!d.loaded
+        missing: !!d.missing, loaded: !!d.loaded,
+        confirmed: d.ev && validDay(d.ev.confirmed) ? d.ev.confirmed : null
       };
     });
   }
@@ -1181,21 +1254,19 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       const d = new Date(start); d.setDate(start.getDate() + i);
       if (i === 35 && d.getMonth() !== myMonth.getMonth()) break;
       const k = keyOf(d);
-      const items = infos.filter(x => !x.missing && (x.mine.has(k) || (x.top && x.top.k === k)));
-      const tops = infos.filter(x => !x.missing && x.top && x.top.k === k).length;
+      const items = infos.filter(x => !x.missing && x.confirmed === k);
+      const tops = items.length;
       const cls = ["mday"];
       if (d.getMonth() !== myMonth.getMonth()) cls.push("out");
       if (d < today) cls.push("past");
       if (k === todayKey) cls.push("today");
+      if (tops >= 1) cls.push("conf");
       if (tops >= 2) cls.push("clash");
       if (k === myFocus) cls.push("focus");
       html += `<button class="${cls.join(" ")}" data-k="${k}">
         <span class="num">${d.getDate()}</span>
         ${tops >= 2 ? `<span class="clash-label">${esc(t("clashTag"))}</span>` : ""}
-        ${items.slice(0,3).map(x => {
-          const isTop = x.top && x.top.k === k, picked = x.mine.has(k);
-          return `<span class="tag ${picked ? "" : "ghost"}" style="--c:${x.color}" title="${esc(x.title)}">${isTop ? "★ " : ""}${esc(x.title)}</span>`;
-        }).join("")}
+        ${items.slice(0,3).map(x => `<span class="tag ctagm" style="--c:${x.color}" title="${esc(x.title)}">${esc(x.title)}</span>`).join("")}
         ${items.length > 3 ? `<span class="evmeta">+${items.length - 3}</span>` : ""}
       </button>`;
     }
@@ -1203,7 +1274,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
 
     // clashes
     const byTop = {};
-    for (const x of infos) if (!x.missing && x.top) (byTop[x.top.k] ||= []).push(x);
+    for (const x of infos) if (!x.missing && x.confirmed) (byTop[x.confirmed] ||= []).push(x);
     const clashes = Object.entries(byTop).filter(([,xs]) => xs.length >= 2).sort((a,b) => a[0].localeCompare(b[0]));
     $("clashes").innerHTML = clashes.length ? clashes.map(([k,xs]) => `
       <div class="clashrow"><b>${esc(dShort.format(parseKey(k)))}</b>
@@ -1217,7 +1288,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       $("myDetail").innerHTML = `<div class="detail-h">${esc(full.format(parseKey(myFocus)))}</div>` + infos.filter(x => !x.missing).map(x => `
         <div class="cmp"><span class="evsw" style="background:${x.color};margin-top:3px"></span>
           <div><b>${esc(x.title)}</b>
-          <span>${esc(x.joined ? (x.mine.has(myFocus) ? t("youFree") : t("youNotPicked")) : t("youNotJoined"))} · ${esc(t("peopleFree", x.counts[myFocus] || 0, x.size))}${x.top && x.top.k === myFocus ? " · " + esc(t("isTop")) : ""}</span></div></div>`).join("");
+          <span>${x.confirmed === myFocus ? `<span class="cpill">${esc(t("cmpConfirmedHere"))}</span>` : esc(x.confirmed ? t("confirmedNote", dShort.format(parseKey(x.confirmed))) : t("notConfirmed"))} · ${esc(x.joined ? (x.mine.has(myFocus) ? t("youFree") : t("youNotPicked")) : t("youNotJoined"))}</span></div></div>`).join("");
     }
 
     // events list
@@ -1228,7 +1299,7 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
         <div style="min-width:0"><div class="evtitle">${esc(x.title)}${x.id === EVENT ? `<span class="here">${esc(t("viewing"))}</span>` : ""}</div>
           <div class="evmeta">${x.missing ? esc(t("evGone")) : !x.loaded ? esc(t("loading")) :
             esc(x.joined ? t("youPicked", x.mine.size) : t("youNotJoined")) + "<br>" +
-            esc(x.top ? t("topDayIs", dShort.format(parseKey(x.top.k)), x.top.n, x.size) : t("noTopDay"))}</div></div>
+            (x.confirmed ? `<span class="cpill">✔ ${esc(t("confirmedNote", dShort.format(parseKey(x.confirmed))))}</span>` : esc(t("notConfirmed")))}</div></div>
         ${x.missing || x.id === EVENT ? "<span></span>" : `<button class="hbtn" data-open="${esc(x.id)}">${esc(t("open"))}</button>`}
         ${x.id === EVENT ? "<span></span>" : `<button class="xbtn" data-rm="${esc(x.id)}" title="${esc(t("removeFromList"))}" aria-label="${esc(t("removeFromList"))}">×</button>`}
       </div>`).join("")
