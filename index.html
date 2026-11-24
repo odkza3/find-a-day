@@ -118,14 +118,15 @@
   .mgrid .mday.out,.mgrid .mday.past{opacity:.35}
   .mgrid .mday.today .num{background:var(--ink);color:#fff;border-radius:999px;padding:0 7px;align-self:flex-start}
   .mgrid .mday.focus{outline:3px solid var(--ink);outline-offset:1px}
-  .mgrid .mday.conf{border-color:#EF6F3C;box-shadow:inset 0 0 0 2px #EF6F3C}
+  .mgrid .mday.conf{border-color:#EF6F3C;box-shadow:inset 0 0 0 1.5px #EF6F3C}
   .mgrid .mday.conf::after{content:"✔";position:absolute;top:6px;right:8px;font-size:12px;font-weight:700;color:#EF6F3C}
   .mgrid .mday.conf.clash::after{content:none}
   .tag.ctagm{background:color-mix(in srgb,var(--c) 24%,#fff);color:var(--ink);border-left:3px solid var(--c)}
   .cpill{display:inline-block;background:#EF6F3C;color:#fff;font-weight:700;font-size:11px;border-radius:5px;padding:1px 7px;margin-top:2px}
-  .mgrid .mday.clash{box-shadow:inset 0 0 0 3px #FF7BAC}
+  .mgrid .mday.clash{border-color:#FF7BAC;box-shadow:inset 0 0 0 1.5px #FF7BAC}
   .tag{display:block;font-size:11px;line-height:1.35;padding:2px 6px;border-radius:5px;background:color-mix(in srgb,var(--c) 24%,#fff);border-left:3px solid var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;color:var(--ink)}
   .tag.ghost{background:#fff;border:1px dashed var(--c);border-left:3px solid var(--c);color:var(--muted)}
+  .tag.ghost.clashpick{background:#FFF1F6;color:var(--ink)}
   .clash-label{font-size:10px;font-weight:700;background:#FF7BAC;color:#111;border-radius:4px;padding:1px 5px;display:inline-block}
   .mday .clash-label{position:absolute;top:6px;right:6px}
   .evrow{display:grid;grid-template-columns:14px 1fr auto auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
@@ -171,7 +172,7 @@
   .day.confirmed .cnt{color:#fff}
   .day.confirmed.mine::after{color:#fff}
   .day .clabel{font-size:10px;font-weight:700;background:#fff;color:#EF6F3C;border-radius:4px;padding:1px 5px;align-self:flex-start;line-height:1.3}
-  .sw-outline{background:#fff;border:2px solid #EF6F3C;color:#EF6F3C;display:inline-grid;place-items:center;font-size:10px;font-weight:700}
+  .sw-outline{background:#fff;border:2.5px solid #EF6F3C;color:#EF6F3C;display:inline-grid;place-items:center;font-size:10px;font-weight:700}
   .sw-conf{display:inline-grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
   .rank .pos{font-weight:700;color:var(--muted);font-size:13px;text-align:center}
   .rank li:first-child .pos{color:var(--ink)}
@@ -479,8 +480,8 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       createNew:"Create a new event",
       myEventsBtn:"My events", seeMyEvents:"Or see my events", myEvents:"My events",
       myEventsHint:"Every event you've opened on this device, on one calendar.",
-      myHint:"Orange outline = confirmed day. Dashed tags = days you picked in events that aren't confirmed yet.",
-      legendPicked:"Days you picked", legendTop:"Event's top day", clashTag:"Clash", legendClash:"2+ events confirmed on the same day",
+      myHint:"Orange outline = confirmed day. Grey dashed tags = days you picked in events that aren't confirmed yet. Pink = clash.",
+      legendPicked:"Days you picked", legendTop:"Event's top day", clashTag:"Clash", legendClash:"a confirmed event lands on another confirmed event or one of your picks", confirmedShort:"(confirmed)", alsoPicked:"You also picked this day for: ",
       clashTitle:"Clashes", noClash:"No clashes right now 👍", clashMany:n=>`${n} events have their top day here`,
       compareTitle:"Compare a day", myDayHint:"Hover or tap a day to compare your events.",
       eventsTitle:"Events", evCount:n=>`(${n})`,
@@ -530,8 +531,8 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       createNew:"建立新活動",
       myEventsBtn:"我嘅活動", seeMyEvents:"或者睇我嘅活動", myEvents:"我嘅活動",
       myEventsHint:"喺呢部機打開過嘅所有活動，放埋喺同一個日曆。",
-      myHint:"橙色框係已確認嘅日子；虛線色條係未確認活動入面你揀咗嘅日子。",
-      legendPicked:"你揀咗嘅日子", legendTop:"活動最多人得閒", clashTag:"撞期", legendClash:"兩個或以上活動確認咗同一日",
+      myHint:"橙色框係已確認嘅日子；灰色虛線係未確認活動入面你揀咗嘅日子；粉紅色係撞期。",
+      legendPicked:"你揀咗嘅日子", legendTop:"活動最多人得閒", clashTag:"撞期", legendClash:"已確認嘅活動撞到另一個已確認活動，或者你揀咗嘅日子", confirmedShort:"（已確認）", alsoPicked:"你喺呢啲活動都揀咗呢日：",
       clashTitle:"撞期提示", noClash:"暫時冇撞期 👍", clashMany:n=>`${n} 個活動最多人得閒都係呢日`,
       compareTitle:"比較同一日", myDayHint:"將滑鼠移到或點一下日子，比較你嘅活動。",
       eventsTitle:"活動", evCount:n=>`（${n}）`,
@@ -580,8 +581,9 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
   const EVENT_URL = id => location.pathname + "?e=" + id;
 
   // Events opened on this device (for My events). Each keeps its own colour.
-  const EVCOLORS = ["#52A5CE","#25533F","#FF7BAC","#AFAB23","#6D1F42",
-                    "#876029","#EFCE7B","#AACC96","#D3B6D3","#B8CEE8","#F4BEAE"];
+  // Bubblegum pink is kept for 撞期 (clash) and Peach Frost is too close to it, so events don't use them
+  const EVCOLORS = ["#52A5CE","#25533F","#AFAB23","#6D1F42",
+                    "#876029","#EFCE7B","#AACC96","#D3B6D3","#B8CEE8"];
   function getList(){ try { const v = JSON.parse(ls.get("yt-events") || "[]"); return Array.isArray(v) ? v.filter(x => x && typeof x.id === "string") : []; } catch (e) { return []; } }
   function saveList(l){ ls.set("yt-events", JSON.stringify(l.slice(0, 20))); }
   function recordEvent(id, title, keepOrder){
@@ -620,10 +622,11 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
   }
 
   // Pastel palette: each person gets their own colour (unique while there are colours left).
-  // Palette: Blue Berry, Bubblegum, Tea Green, Butter Yellow, Lilacs,
+  // Palette: Blue Berry, Tea Green, Butter Yellow, Lilacs,
+  //          (Bubblegum #FF7BAC is kept only for 撞期 / clashes)
   //          (Blood Orange #EF6F3C is kept only for days when everyone is free)
   //          Forest, Peach Frost, Grape Juice, Iced Blue, Olive Green, Dry Earth
-  const PASTELS = ["#52A5CE","#FF7BAC","#AACC96","#EFCE7B","#D3B6D3",
+  const PASTELS = ["#52A5CE","#AACC96","#EFCE7B","#D3B6D3",
                    "#25533F","#F4BEAE","#6D1F42","#B8CEE8","#AFAB23","#876029"];
   const hashOf = id => { let h=0; for (const c of id) h=(h*31+c.charCodeAt(0))>>>0; return h; };
   let colorMap = {};
@@ -1264,19 +1267,21 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
       const pickedHere = infos.filter(x => !x.missing && !x.confirmed && x.mine.has(k));
       const items = [...confirmedHere, ...pickedHere];
       const tops = confirmedHere.length;
+      // 撞期: a confirmed event shares the day with another confirmed event or with one of your picks
+      const isClash = tops >= 2 || (tops >= 1 && pickedHere.length >= 1);
       const cls = ["mday"];
       if (d.getMonth() !== myMonth.getMonth()) cls.push("out");
       if (d < today) cls.push("past");
       if (k === todayKey) cls.push("today");
       if (tops >= 1) cls.push("conf");
-      if (tops >= 2) cls.push("clash");
+      if (isClash) cls.push("clash");
       if (k === myFocus) cls.push("focus");
       html += `<button class="${cls.join(" ")}" data-k="${k}">
         <span class="num">${d.getDate()}</span>
-        ${tops >= 2 ? `<span class="clash-label">${esc(t("clashTag"))}</span>` : ""}
+        ${isClash ? `<span class="clash-label">${esc(t("clashTag"))}</span>` : ""}
         ${items.slice(0,3).map(x => x.confirmed === k
-          ? `<span class="tag ctagm" style="--c:${x.color}" title="${esc(x.title)}">${esc(x.title)}</span>`
-          : `<span class="tag ghost" style="--c:${x.color}" title="${esc(x.title)} · ${esc(t("pickedNotConfirmed"))}">${esc(x.title)}</span>`).join("")}
+          ? `<span class="tag ctagm" style="--c:#EF6F3C" title="${esc(x.title)}">${esc(x.title)}</span>`
+          : `<span class="tag ghost ${tops ? "clashpick" : ""}" style="--c:${tops ? "#FF7BAC" : "#9a9a9a"}" title="${esc(x.title)} · ${esc(t("pickedNotConfirmed"))}">${esc(x.title)}</span>`).join("")}
         ${items.length > 3 ? `<span class="evmeta">+${items.length - 3}</span>` : ""}
       </button>`;
     }
@@ -1285,10 +1290,13 @@ let initializeApp, getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, 
     // clashes
     const byTop = {};
     for (const x of infos) if (!x.missing && x.confirmed) (byTop[x.confirmed] ||= []).push(x);
-    const clashes = Object.entries(byTop).filter(([,xs]) => xs.length >= 2).sort((a,b) => a[0].localeCompare(b[0]));
-    $("clashes").innerHTML = clashes.length ? clashes.map(([k,xs]) => `
+    const clashes = Object.entries(byTop).map(([k,xs]) => [k, xs, infos.filter(x => !x.missing && !x.confirmed && x.mine.has(k))])
+      .filter(([,xs,picks]) => xs.length >= 2 || picks.length >= 1)
+      .sort((a,b) => a[0].localeCompare(b[0]));
+    const sw = x => `<span class="evsw" style="display:inline-block;width:9px;height:9px;background:${x.color}"></span>`;
+    $("clashes").innerHTML = clashes.length ? clashes.map(([k,xs,picks]) => `
       <div class="clashrow"><b>${esc(dShort.format(parseKey(k)))}</b>
-        <small>${xs.map(x => `<span class="evsw" style="display:inline-block;width:9px;height:9px;background:${x.color}"></span> ${esc(x.title)}`).join("　")}</small></div>`).join("")
+        <small>${xs.map(x => `${sw(x)} ${esc(x.title)} ${esc(t("confirmedShort"))}`).join("　")}${picks.length ? `<br>${esc(t("alsoPicked"))}${picks.map(x => esc(x.title)).join("、")}` : ""}</small></div>`).join("")
       : `<div class="empty">${esc(t("noClash"))}</div>`;
 
     // compare a day
